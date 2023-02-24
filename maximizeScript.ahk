@@ -134,7 +134,7 @@ updateVariable() {
 }
 
 unWrapWindow(){
-
+    updateVariable()
     if CurrentDesktop = 0 and WinExist("A") {
         activeHwnd := WinGetID("A")
         WinGetPos &X, &Y, &W, &H, activeHwnd
@@ -146,6 +146,7 @@ unWrapWindow(){
             SetDesktopName(newDesktop, title)
             MoveCurrentWindowToDesktop(newDesktop)
         }
+        updateVariable()
     }
 
     if (CurrentDesktop > 0) and WinExist("A") {
@@ -161,28 +162,7 @@ unWrapWindow(){
         if !(style & 0x1000000) and !(W = A_ScreenWidth) {
             RemoveDesktop(CurrentDesktop, 0)
         }
+        updateVariable()
     }
-    updateVariable()
     return
-
-    ; if WinExist("A") {
-    ;     title := WinGetProcessName("A")
-
-    ;     if title = GetDesktopName(CurrentDesktop) {
-    ;         return
-    ;     }
-
-    ;     activeHwnd := WinGetID("A")
-    ;     style := WinGetStyle("A")
-    ;     if (CurrentDesktop = 0) and (style & 0x1000000) {
-    ;         newDesktop := CreateDesktop()
-    ;         SetDesktopName(newDesktop, title)
-    ;         MoveCurrentWindowToDesktop(newDesktop)
-    ;     }
-    ;     if !(CurrentDesktop = 0) and !(style & 0x1000000) {
-    ;         RemoveDesktop(CurrentDesktop, 0)
-    ;     }
-    ;     updateVariable()
-    ; }
-    ; return
 }
