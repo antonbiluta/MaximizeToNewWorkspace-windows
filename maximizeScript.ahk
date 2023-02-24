@@ -112,10 +112,6 @@ OnChangeDesktop(wParam, lParam, msg, hwnd) {
     ; TraySetIcon(".\Icons\icon" NewDesktop ".ico")
 }
 
-Ctrl & F11:: {
-    MsgBox DesktopCount
-}
-
 ; fullscreen mode
 DesktopCount := -1
 CurrentDesktop := -1
