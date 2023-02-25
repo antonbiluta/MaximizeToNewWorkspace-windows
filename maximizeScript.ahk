@@ -1,4 +1,4 @@
-﻿SetWorkingDir(A_ScriptDir)
+SetWorkingDir(A_ScriptDir)
 
 ; Path to the DLL, relative to the script
 VDA_PATH := A_ScriptDir . "\VirtualDesktopAccessor.dll"
@@ -115,7 +115,19 @@ OnChangeDesktop(wParam, lParam, msg, hwnd) {
 ; fullscreen mode
 DesktopCount := -1
 CurrentDesktop := -1
+titleDesktop := ""
+hide := False
+desktopList := False
 SetTimer unWrapWindow, 1000
+
+Ctrl & Left::GoToPrevDesktop()
+Ctrl & Right::GoToNextDesktop()
+Ctrl & 1::MoveOrGotoDesktopNumber(0)
+Ctrl & 2::MoveOrGotoDesktopNumber(1)
+Ctrl & 3::MoveOrGotoDesktopNumber(2)
+Ctrl & 4::MoveOrGotoDesktopNumber(3)
+Ctrl & 5::MoveOrGotoDesktopNumber(4)
+
 return
 
 GetCurrentDesktop(){
@@ -129,36 +141,53 @@ updateVariable() {
     return
 }
 
+updateDesktopTitle() {
+    global titleDesktop
+    titleDesktop := GetDesktopName(CurrentDesktop)
+    return
+}
+
 unWrapWindow(){
     updateVariable()
-    if CurrentDesktop = 0 and WinExist("A") {
+
+    try {
         activeHwnd := WinGetID("A")
         WinGetPos &X, &Y, &W, &H, activeHwnd
-        title := WinGetProcessName(activeHwnd)
+        title := activeHwnd
         style := WinGetStyle(activeHwnd)
 
-        if (style & 0x1000000) and !(W < A_ScreenWidth) {
+        ; Если развернули, то открыть на отдельном ворке
+        if CurrentDesktop = 0 and (style & 0x1000000) and !(W < A_ScreenHeight) {
             newDesktop := CreateDesktop()
             SetDesktopName(newDesktop, title)
             MoveCurrentWindowToDesktop(newDesktop)
         }
-        updateVariable()
-    }
 
-    if (CurrentDesktop > 0) and WinExist("A") {
-        activeHwnd := WinGetID("A")
+        ; Если свернули, проверить собственное ли это окно, если да - удалить
+        if CurrentDesktop > 0 and !(style & 0x1000000) and (W < A_ScreenWidth) {
+            updateDesktopTitle()
+            if title = titleDesktop {
+                RemoveDesktop(CurrentDesktop, 0)
+            }
+        }
 
-        titleA := WinGetProcessName(activeHwnd)
-        titleDesktop := GetDesktopName(CurrentDesktop)
-        if !(titleA = titleDesktop) {
-            return
+        ; Если открыли другое окно на персональном (Use with MyDockFinder)
+        if CurrentDesktop > 0 {
+            updateDesktopTitle()
+            currentHwnd := WinGetID("ahk_id " titleDesktop)
+            activeHwnd := WinGetID("A")
+            WinGetPos &X, &Y, &W, &H, activeHwnd
+
+            if !(activeHwnd = currentHwnd) {
+                MoveCurrentWindowToDesktop(0)
+            } 
         }
-        WinGetPos ,, &W, &H, activeHwnd
-        style := WinGetStyle(activeHwnd)
-        if !(style & 0x1000000) and !(W = A_ScreenWidth) {
-            RemoveDesktop(CurrentDesktop, 0)
-        }
-        updateVariable()
+
     }
+    catch TargetError
+        OutputDebug A_Now ": Window wait.."
+    finally
+        updateVariable()
+
     return
 }
